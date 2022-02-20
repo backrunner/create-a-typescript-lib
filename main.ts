@@ -292,7 +292,7 @@ const init = async () => {
     const licensePath = path.resolve(projectPath, './LICENSE');
     const licenseContent = getLicense(userInfo.license, {
       author: userInfo.author,
-      year: `${new Date().getFullYear}`,
+      year: `${new Date().getFullYear()}`,
     });
     if (licenseContent) {
       try {
