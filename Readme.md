@@ -6,9 +6,15 @@ This project is created by [create-typescript-cli](https://github.com/backrunner
 
 ## Usage
 
+To initialize a typescript library project:
+
+```bash
+npm create a-typescript-lib
+```
+
 To build this project, you can run this command:
 
-```
+```bash
 npm run build
 ```
 
