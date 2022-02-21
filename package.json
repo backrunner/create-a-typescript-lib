@@ -1,6 +1,6 @@
 {
   "name": "create-a-typescript-lib",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Create a typescript library project instantly",
   "main": "./bin/cli.js",
   "bin": {

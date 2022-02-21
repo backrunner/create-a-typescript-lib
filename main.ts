@@ -126,7 +126,7 @@ const init = async () => {
     }
   } else {
     try {
-      await fsp.mkdir(projectPath);
+      await fsp.mkdir(projectPath, { recursive: true });
     } catch (err) {
       console.error(chalk.red('Cannot create the project folder, please try to init your project again.'));
       throw err;
