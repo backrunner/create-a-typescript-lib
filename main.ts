@@ -115,13 +115,20 @@ const init = async () => {
         message: 'Do you want to empty the directory and then create the project?',
         default: false,
       });
-      if (delConfirm.v) {
-        try {
-          await fsp.rm(projectPath, { recursive: true, force: true });
-        } catch (err) {
-          console.error(chalk.red('Cannot delete the project folder, please try to init your project again.'));
-          throw err;
-        }
+      if (!delConfirm.v) {
+        return;
+      }
+      try {
+        await fsp.rm(projectPath, { recursive: true, force: true });
+      } catch (err) {
+        console.error(chalk.red('Cannot delete the project folder, please try to init your project again.'));
+        throw err;
+      }
+      try {
+        await fsp.mkdir(projectPath, { recursive: true });
+      } catch (err) {
+        console.error(chalk.red('Cannot create the project folder, please try to init your project again.'));
+        throw err;
       }
     }
   } else {
