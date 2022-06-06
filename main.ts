@@ -8,9 +8,11 @@ import ejs from 'ejs';
 import fs from 'fs';
 import fsp from 'fs/promises';
 import spdxList from 'spdx-license-ids';
+import UserDataStorage from 'userdata-storage';
 import { getLicense } from 'license';
 import README_TEMPLATE from './templates/Readme.md.ejs';
 import { repos } from './consts';
+import { getActualProjectPath, isRetry } from './utils';
 
 interface UserInfo {
   name: string;
@@ -28,75 +30,95 @@ interface GitOptions {
 
 const UNNECESSARY_FILES = ['./CHANGELOG.md'];
 const UNNECESSARY_PACKAGE_INFO = ['keywords', 'bugs', 'repository', 'homepage'];
+const LAST_USER_INFO_KEY = 'last-user-info';
 
 const licenseIds = spdxList.map((item) => item.toLowerCase());
+const userStorage = new UserDataStorage('create-a-typescript-lib', 'storage');
 
 const init = async () => {
-  // input info
-  console.log(chalk.cyan('We need some necessary information to initialize your typescript cli project:'));
-  const userInfo: UserInfo = await inquirer.prompt([
-    {
-      type: 'input',
-      name: 'name',
-      message: 'Project Name: ',
-      validate: (v) => {
-        if (!v) {
-          return 'Project name should not be empty.';
-        }
-        return true;
+  let userInfo: UserInfo | null = null;
+  if (isRetry()) {
+    const stored = (await userStorage.get(LAST_USER_INFO_KEY)) as UserInfo;
+    if (stored) {
+      userInfo = stored;
+    } else {
+      console.warn(chalk.yellow('Cannot find stored information of the last try.'));
+    }
+  }
+  if (!userInfo) {
+    // input info
+    console.log(chalk.cyan('We need some necessary information to initialize your typescript cli project:'));
+    userInfo = (await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'name',
+        message: 'Project Name: ',
+        validate: (v: string) => {
+          if (!v) {
+            return 'Project name should not be empty.';
+          }
+          return true;
+        },
       },
-    },
-    {
-      type: 'input',
-      name: 'desc',
-      message: 'Description: ',
-      default: '',
-    },
-    {
-      type: 'input',
-      name: 'version',
-      message: 'Version: ',
-      default: '0.0.0',
-    },
-    {
-      type: 'input',
-      name: 'author',
-      message: 'Author: ',
-      default: '',
-    },
-    {
-      type: 'input',
-      name: 'license',
-      message: 'License: ',
-      default: 'MIT',
-      validate: (v) => {
-        return licenseIds.includes(v.toLowerCase())
-          ? true
-          : 'Invalid license name (the license name should in the SPDX License List).\nSee https://spdx.org/licenses/ for more details.';
+      {
+        type: 'input',
+        name: 'desc',
+        message: 'Description: ',
+        default: '',
       },
-    },
-    {
-      type: 'confirm',
-      name: 'useGit',
-      message: 'Do you want to use Git to manage your project?',
-      default: true,
-    },
-  ]);
+      {
+        type: 'input',
+        name: 'version',
+        message: 'Version: ',
+        default: '0.0.0',
+      },
+      {
+        type: 'input',
+        name: 'author',
+        message: 'Author: ',
+        default: '',
+      },
+      {
+        type: 'input',
+        name: 'license',
+        message: 'License: ',
+        default: 'MIT',
+        validate: (v: string) => {
+          return licenseIds.includes(v.toLowerCase())
+            ? true
+            : 'Invalid license name (the license name should in the SPDX License List).\nSee https://spdx.org/licenses/ for more details.';
+        },
+      },
+      {
+        type: 'confirm',
+        name: 'useGit',
+        message: 'Do you want to use Git to manage your project?',
+        default: true,
+      },
+    ])) as UserInfo;
+  }
+
+  if (!userInfo) {
+    console.error(chalk.red('Invalid user project information.'));
+    return;
+  } else {
+    await userStorage.set(LAST_USER_INFO_KEY, userInfo);
+  }
 
   let gitOptions: GitOptions | null = null;
   if (userInfo.useGit) {
-    gitOptions = await inquirer.prompt([
+    gitOptions = (await inquirer.prompt([
       {
         type: 'input',
         name: 'commitMsg',
         message: 'First commit message: ',
         default: 'First commit',
       },
-    ]);
+    ])) as GitOptions;
   }
 
   // check conflict
-  const projectPath = path.resolve(process.cwd(), `./${userInfo.name}`);
+  const { projectPath, projectFolderName } = await getActualProjectPath(userInfo.name);
   if (fs.existsSync(projectPath)) {
     const stat = await fsp.stat(projectPath);
     if (stat.isDirectory()) {
@@ -347,7 +369,7 @@ const init = async () => {
   // done
   console.log(
     chalk.green(
-      `\nAll things done. :D\nYou can build up your project now!\n\nCommands to build your project: \n\ncd ./${userInfo.name}\nnpm run build\n`,
+      `\nAll things done. :D\nYou can build up your project now!\n\nCommands to build your project: \n\ncd ./${projectFolderName}\nnpm run build\n`,
     ),
   );
 };
