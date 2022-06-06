@@ -385,7 +385,7 @@ const init = async () => {
   // done
   console.log(
     chalk.green(
-      `\nAll things done. :D\nYou can build up your project now!\n\nCommands to build your project: \n\ncd ./${projectFolderName}\nnpm run build\n`,
+      `\nAll things done. :D\nYou can build up your project now!\n\nCommands to build your project: \n\ncd ./${projectFolderName || userInfo.name}\nnpm run build\n`,
     ),
   );
 };
