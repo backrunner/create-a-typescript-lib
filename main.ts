@@ -31,6 +31,7 @@ interface GitOptions {
 const UNNECESSARY_FILES = ['./CHANGELOG.md'];
 const UNNECESSARY_PACKAGE_INFO = ['keywords', 'bugs', 'repository', 'homepage'];
 const LAST_USER_INFO_KEY = 'last-user-info';
+const LAST_GIT_OPTIONS_KEY = 'last-git-options';
 
 const licenseIds = spdxList.map((item) => item.toLowerCase());
 const userStorage = new UserDataStorage('create-a-typescript-lib', 'storage');
@@ -106,15 +107,30 @@ const init = async () => {
   }
 
   let gitOptions: GitOptions | null = null;
+
+  if (isRetry()) {
+    const stored = (await userStorage.get(LAST_USER_INFO_KEY)) as GitOptions;
+    if (stored) {
+      gitOptions = stored;
+    } else {
+      console.warn(chalk.yellow('Cannot find stored git options of the last try.'));
+    }
+  }
+
   if (userInfo.useGit) {
-    gitOptions = (await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'commitMsg',
-        message: 'First commit message: ',
-        default: 'First commit',
-      },
-    ])) as GitOptions;
+    if (!gitOptions) {
+      gitOptions = (await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'commitMsg',
+          message: 'First commit message: ',
+          default: 'First commit',
+        },
+      ])) as GitOptions;
+      await userStorage.set(LAST_GIT_OPTIONS_KEY, gitOptions);
+    }
+  } else {
+    await userStorage.remove(LAST_GIT_OPTIONS_KEY);
   }
 
   // check conflict
