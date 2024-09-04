@@ -1,15 +1,17 @@
 /* eslint-disable complexity */
 /* eslint-disable no-console */
-import childProcess from 'child_process';
+import childProcess from 'node:child_process';
+import path from 'node:path';
+import fs from 'node:fs';
+import { promises as fsp } from 'node:fs';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
-import path from 'path';
 import ejs from 'ejs';
-import fs from 'fs';
-import fsp from 'fs/promises';
 import spdxList from 'spdx-license-ids';
 import UserDataStorage from 'userdata-storage';
 import { getLicense } from 'license';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 import README_TEMPLATE from './templates/Readme.md.ejs';
 import { repos } from './consts';
 import { getActualProjectPath, isRetry } from './utils';
@@ -36,7 +38,7 @@ const LAST_GIT_OPTIONS_KEY = 'last-git-options';
 const licenseIds = spdxList.map((item) => item.toLowerCase());
 const userStorage = new UserDataStorage('create-a-typescript-lib', 'storage');
 
-const init = async () => {
+const init = async (registry?: string) => {
   let userInfo: UserInfo | null = null;
   if (isRetry()) {
     const stored = (await userStorage.get(LAST_USER_INFO_KEY)) as UserInfo;
@@ -206,8 +208,12 @@ const init = async () => {
   console.log(chalk.green('Looks good, we need to do some final work to finish the initialization, please stand by.'));
   try {
     console.log(chalk.cyan('Installing the dependencies, please wait for a minute...'));
-    childProcess.execSync('npm install', {
+    const npmCommand = registry
+      ? `npm install --registry=${registry}`
+      : 'npm install';
+    childProcess.execSync(npmCommand, {
       cwd: projectPath,
+      stdio: 'inherit',
     });
   } catch (err) {
     console.error(chalk.red('Cannot install the dependencies due to an error, please try to init your project again.'));
@@ -217,7 +223,7 @@ const init = async () => {
   // update package.json
   const packageInfoPath = path.resolve(projectPath, './package.json');
   if (fs.existsSync(packageInfoPath)) {
-    const packageInfo = JSON.parse(fs.readFileSync(packageInfoPath, { encoding: 'utf8' }));
+    const packageInfo = JSON.parse(await fsp.readFile(packageInfoPath, { encoding: 'utf8' }));
     const { name, author, license, desc, version } = userInfo;
     Object.assign(packageInfo, {
       name,
@@ -232,7 +238,7 @@ const init = async () => {
       delete packageInfo[key];
     });
     try {
-      fs.writeFileSync(packageInfoPath, JSON.stringify(packageInfo, null, '  '), {
+      await fsp.writeFile(packageInfoPath, JSON.stringify(packageInfo, null, '  '), {
         encoding: 'utf-8',
       });
     } catch (err) {
@@ -390,6 +396,17 @@ const init = async () => {
   );
 };
 
-// execute
+const argv = yargs(hideBin(process.argv))
+  .option('registry', {
+    describe: 'Specify npm registry',
+    type: 'string',
+  })
+  .help()
+  .parseSync();
 
-init();
+const { registry } = argv;
+
+init(registry).catch((error) => {
+  console.error('An error occurred during initialization:', error);
+  process.exit(1);
+});
