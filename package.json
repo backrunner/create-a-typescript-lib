@@ -1,6 +1,6 @@
 {
   "name": "create-a-typescript-lib",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Create a typescript library project instantly",
   "main": "./bin/cli.js",
   "bin": {
@@ -16,19 +16,19 @@
   "author": "BackRunner",
   "license": "MIT",
   "devDependencies": {
-    "@babel/core": "^7.22.10",
-    "@babel/eslint-parser": "^7.22.10",
-    "@babel/preset-env": "^7.22.10",
-    "@babel/preset-typescript": "^7.22.5",
+    "@babel/core": "^7.25.2",
+    "@babel/eslint-parser": "^7.25.1",
+    "@babel/preset-env": "^7.25.4",
+    "@babel/preset-typescript": "^7.24.7",
     "@backrunner/rollup-plugin-string": "^3.1.1",
     "@rollup/plugin-babel": "^5.3.1",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.3.0",
-    "@types/ejs": "^3.1.2",
-    "@types/inquirer": "^8.2.6",
+    "@types/ejs": "^3.1.5",
+    "@types/inquirer": "^8.2.10",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
-    "eslint": "^8.46.0",
+    "eslint": "^8.57.0",
     "eslint-config-alloy": "^4.9.0",
     "eslint-config-prettier": "^8.10.0",
     "prettier": "^2.8.8",
@@ -39,10 +39,10 @@
   "dependencies": {
     "chalk": "^4.1.2",
     "commander": "^9.5.0",
-    "ejs": "^3.1.9",
+    "ejs": "^3.1.10",
     "inquirer": "^8.2.6",
     "license": "^1.0.3",
-    "spdx-license-ids": "^3.0.13",
+    "spdx-license-ids": "^3.0.20",
     "userdata-storage": "0.0.1"
   }
 }
